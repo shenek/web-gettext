@@ -8,15 +8,41 @@
     <script src="./bootstrap.js"></script>
     <script>
         var Myglob = {};
+        var waitForGettext = timeoutms => new Promise((r, j) => {
+            var check = () => {
+              console.warn('checking')
+              if(WebGettext != undefined)
+                r()
+              else if((timeoutms -= 100) < 0)
+                j('timed out!')
+              else
+                setTimeout(check, 100)
+            }
+            setTimeout(check, 100)
+          });
         document.addEventListener("DOMContentLoaded", function(event) {
             let f = async () => {
                 let resp = await fetch("integration.mo");
                 let bufferedData = await resp.arrayBuffer();
                 let data = new Uint8Array(bufferedData);
+                await waitForGettext(20000);
                 Myglob.translator = WebGettext.Translator.new(data);
             };
             f();
         });
+        var gettextOnClick = (e) => {
+            e.textContent = Myglob.translator.gettext(e.textContent);
+        };
+        var ngettext1OnClick = (e) => {
+            e.textContent = Myglob.translator.ngettext(e.getAttribute("data-singular"), e.getAttribute("data-plural"), 1);
+        };
+        var ngettext2OnClick = (e) => {
+            e.textContent = Myglob.translator.ngettext(e.getAttribute("data-singular"), e.getAttribute("data-plural"), 2);
+        };
     </script>
+    <div>Missing: <span onclick="gettextOnClick(this)">Not found</span></div>
+    <div>Found: <span onclick="gettextOnClick(this)">existent</span></div>
+    <div>Singular: <span onclick="ngettext1OnClick(this)" data-singular="a good string" data-plural="good strings">a good string</span></div>
+    <div>Plural: <span onclick="ngettext2OnClick(this)" data-singular="a good string" data-plural="good strings">good strings</span></div>
   </body>
 </html>
